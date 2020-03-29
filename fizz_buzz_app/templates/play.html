@@ -1,0 +1,329 @@
+{%extends 'base.html'%}
+{%block content%}
+
+	<h4 class="alert alert-info" id="gameover"><span id="mylevelheader">Easy<span> Level | Click Start to Play</h4>
+	
+	<div class="centerContent">
+		<a id="restart" href="#" type="button" class="btn btn-info">Start</a>
+		<a id="view_top_scores" type="button" class="view_top_scores btn btn-info" >Top Players</a>		
+		<a type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Game Level</a>
+	</div>
+	
+	<hr/>
+
+	<div class="gamefield">
+		<hr/>
+		<div class="row centerContent">
+			<div class="col-4 col-md-4 col-sm-4 col-xs-4"><h5 >Highest: <span id="high_score">{{high_score}}</span></h5></div>
+			<div class="col-4 col-md-4 col-sm-4 col-xs-4"><h5 class="missed">Missed: <span id="missed_score">0</span></h5></div>
+			<div class="col-4 col-md-4 col-sm-4 col-xs-4"><h5 class="scored">Total: <span id="total_score">0</span></h5></div>
+		</div>
+		
+		<hr/>
+		<div class="row">
+			<div class="col-md-12 centerContent"><span id="mynumber">00.00</span></div>
+		</div>		
+	</div>
+<hr/>
+	<div class="centerContent">
+		<button id="fizz" type="button" class="btn btn-info">Fizz</button>
+		<button id="buzz" type="button" class="btn btn-info">Buzz</button>
+		<button id="fizzbuzz" type="button" class="btn btn-info">FizzBuzz</button>
+		<button id="number" type="button" class="btn btn-info">None</button>
+	</div>
+	
+	<hr/>
+	<div class="centerContent">
+		<a id="reset_scores" href="#" type="button" class="btn btn-info centerContent">Reset Scores</a>
+	</div>
+	
+	<hr/>
+	
+	
+	
+
+
+<!-- The Modal -->
+<div class="modal" id="myModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title">Select Game Level</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body">        
+		<div id="selectlevel">		
+			<input id="easy" type="radio" id="male" name="levels" value="easy">
+			<label for="male">Easy</label><br>
+			<input id="medium" type="radio" id="female" name="levels" value="medium">
+			<label for="female">Medium</label><br>
+			<input id="hard" type="radio" id="other" name="levels" value="hard">
+			<label for="other">Hard</label>
+		</div>		
+      </div>
+
+      <!-- Modal footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+	<form id="myform" action='{% url "savenewscore"%}' method="POST">
+	{%csrf_token%}
+		<input type="hidden" value="#" id="my_id" name="score">
+		<input type="hidden" value="#" id="my_final_score" name="score_fin">
+		<input type="hidden" value="" id="total_score" name="score">
+		<input type="submit" style="display:none;">
+	</form>
+	
+	
+	<form id="score_reset" action='{% url "resetscores"%}' method="POST">
+	{%csrf_token%}
+		<input type="submit" style="display:none;">
+	</form>
+
+	<script>
+		function resetDBScores(){
+			$.ajax({
+				url : $("#score_reset").attr('action'),
+				type : $("#score_reset").attr('method'),
+				data : $("#score_reset").serialize(),
+				success : function(json){
+					if(json.score_reset_sucessfully){
+						$("#high_score").html("0");
+						$("#gameover").html("Score Was Reset Sucessfully");
+					}else{
+						$("#gameover").html("Score Failed to Reset");					
+					}
+				},
+				error : function(xhr,errmsg,err) {
+				$('#gameover').html(errmsg);
+				}
+			});
+		}
+		
+		function sendScores(){
+			var score= document.getElementById("total_score").innerHTML;
+			$("#my_final_score").val(score);
+			$.ajax({
+				url : $("#myform").attr('action'),
+				type : $("#myform").attr('method'),
+				data : $("#myform").serialize(),
+				success : function(json){
+					if(json.new_target_achieved){
+						$("#high_score").html(score);
+						$("#gameover").html("Congratulations New Record Achieved");
+					}else{
+						$("#gameover").html("Work Extra harder");					
+					}
+				},
+				error : function(xhr,errmsg,err) {
+				$('#result').html(errmsg);
+				}
+			});
+		}
+
+		function setNewLevel(gameLogic,mycountersObj,delay,missedMax){
+			resetScores(gameLogic);
+			UpdateScores(gameLogic);
+			mycountersObj.delay=delay
+			mycountersObj.mixedMax=missedMax
+		}
+
+		class mycounters{
+			constructor(){
+				this.delay=4000;
+				this.mixedMax=1;
+			}
+		}
+
+		function updateId(score){
+		$("#myscore").val(score);
+		$("#myform").submit();
+		}
+
+		function generateRandomNumber(){
+			return Math.floor(Math.random() * 100) + 1;
+		}
+
+		function UpdateScores(gameLogic){
+			document.getElementById("missed_score").innerHTML=gameLogic.missed;
+			document.getElementById("total_score").innerHTML=gameLogic.score;
+		}
+
+		class GameLogicClass {
+		  constructor() {
+			this.score= 0;
+			this.missed= 0;
+			this.highscore= 0;
+			this.greenLight= 0;
+			this.redLight= 0;
+			this.isFresh=0;
+		  }
+		}
+
+		class UserInputValidator {
+		  is_buzz(n) {
+			return n % 5 == 0;
+		  }
+		  is_fizz(n) {
+			return n % 3 == 0;
+		  }
+		  is_fizzbuzz(n) {
+			return n % 3 == 0 && n % 5 == 0;
+		  }
+		  is_number(n) {
+			return n % 3 != 0 || n % 5 != 0;
+		  }
+		}
+
+		myinputValidator = new UserInputValidator();
+		gameLogic = new GameLogicClass()
+		counter = new mycounters()
+
+		function resetScores(logic){	
+			logic.score= 0;
+			logic.missed= 0;
+			logic.greenLight= 0;
+			logic.redLight= 0;
+			logic.isFresh=0;
+		}
+
+		function startGame(){
+			var myvar = setInterval(function(){
+				if(gameLogic.isFresh==1){
+					gameLogic.missed= gameLogic.missed + 1;
+					UpdateScores(gameLogic);
+				}
+				if(gameLogic.missed > counter.mixedMax){	
+					document.getElementById("gameover").innerHTML="The gave is over";
+					clearInterval(myvar);
+					sendScores();
+				}
+				gameLogic.isFresh=1;
+				document.getElementById("mynumber").innerHTML=generateRandomNumber();
+			},counter.delay);
+		}
+
+
+
+		if(gameLogic.missed > counter.mixedMax ){	
+			document.getElementById("gameover").innerHTML="The gave is over";
+			clearInterval(myvar);
+			sendScores();	
+		}
+
+
+		document.getElementById("fizz").addEventListener("click",function(){
+			if(gameLogic.missed <= counter.mixedMax){
+				if(gameLogic.isFresh==1){
+					gameLogic.isFresh=0;
+					if(myinputValidator.is_fizz(document.getElementById("mynumber").innerHTML)){			
+						gameLogic.score= gameLogic.score + 1;
+					}else{
+						gameLogic.missed= gameLogic.missed + 1;
+					}
+					UpdateScores(gameLogic);
+				}
+			}else{
+				document.getElementById("gameover").innerHTML="The gave is over";
+				clearInterval(myvar);
+				sendScores();
+			}
+		});
+
+		document.getElementById("buzz").addEventListener("click",function(){
+			if(gameLogic.missed <= counter.mixedMax){
+			if(gameLogic.isFresh==1){
+				gameLogic.isFresh=0;	
+				if(myinputValidator.is_buzz(document.getElementById("mynumber").innerHTML)){
+					gameLogic.score= gameLogic.score + 1;		
+				}else{
+					gameLogic.missed= gameLogic.missed + 1;		
+				}
+				UpdateScores(gameLogic);
+			}
+			}else{
+				document.getElementById("gameover").innerHTML="The gave is over";
+				clearInterval(myvar);
+				sendScores();		
+			}
+		});
+
+		document.getElementById("fizzbuzz").addEventListener("click",function(){
+			if(gameLogic.missed <= counter.mixedMax){
+				if(gameLogic.isFresh==1){
+					gameLogic.isFresh=0;	
+					if(myinputValidator.is_fizzbuzz(document.getElementById("mynumber").innerHTML)){
+						gameLogic.score= gameLogic.score + 1;	
+					}else{
+						gameLogic.missed= gameLogic.missed + 1;
+					}
+					UpdateScores(gameLogic);
+				}
+			}else{
+				document.getElementById("gameover").innerHTML="The gave is over";
+				clearInterval(myvar);
+				sendScores();
+			}
+		});
+
+		document.getElementById("number").addEventListener("click",function(){	
+			if(gameLogic.missed <= counter.mixedMax){
+				if(gameLogic.isFresh==1){
+					gameLogic.isFresh=0;
+					if(myinputValidator.is_number(document.getElementById("mynumber").innerHTML)){
+						gameLogic.score= gameLogic.score + 1;		
+					}else{
+						gameLogic.missed= gameLogic.missed + 1;	
+					}
+					UpdateScores(gameLogic);
+				}
+			}else{
+				document.getElementById("gameover").innerHTML="The gave is over";
+				clearInterval(myvar);
+				sendScores();
+			}
+		});
+
+
+		document.getElementById("restart").addEventListener("click",function(){	
+			resetScores(gameLogic);
+			UpdateScores(gameLogic);
+			startGame();
+		});
+
+
+		document.getElementById("view_top_scores").addEventListener("click",function(){	
+			window.location.href="/bestplayers";
+		});
+
+		document.getElementById("reset_scores").addEventListener("click",function(){
+			resetDBScores();
+		});
+
+
+		 $('input:radio[name="levels"]').change(function() {			 
+				if ($(this).val() == 'easy') {
+					alert("easy");
+					setNewLevel(gameLogic,counter,5000,5);
+					//document.getElementById("mylevelheader").innerHTML = "EASY";
+				}else if ($(this).val() == 'medium'){
+					setNewLevel(gameLogic,counter,3000,3);
+					document.getElementById("mylevelheader").innerHTML = "MEDIUM";
+				}else if ($(this).val() == 'hard'){
+					setNewLevel(gameLogic,counter,2000,2);
+					document.getElementById("mylevelheader").innerHTML = "HARD";
+				}
+				
+			});
+	</script>
+{%endblock content%}

@@ -1,0 +1,62 @@
+{% extends 'base.html'%}
+{%block content%}
+
+{%if LoginError%}
+<h4 id="result" class="log alert alert-warning">{{LoginError}}</h4>
+{%else%}
+<h4 id="result" class="log alert alert-info">Login To</h4>
+{%endif%}
+
+<div class="form-box">
+<form id="myform" class="form-horizontal" role="form" method="POST" action='{% url "validatemylogin"%}'>
+{%csrf_token%}
+    <div class="form-group">
+      <label for="name">Enter Username/Email</label>
+      <input class="form-control" type="text" id="username" name="username">
+    </div>
+    <div class="form-group">
+      <label for="email">Enter Password</label>
+      <input class="form-control" type="password" id="password" name="password">
+    </div>	
+   <a href="#" class="btn btn-link">Create new account?</a>
+   <a href="#" class="btn btn-link">Forgot Password?</a><br><hr/>
+    <input class="btn btn-primary" id="login" style="background:orange" type="submit" value="Login" />
+  </form>
+</div>
+
+
+<script>
+$("#myform").submit(function (e) {	
+    e.preventDefault();
+	var username = $("#username").val();
+	var password = $("#password").val();   
+	if(password.length == 0 || username.length == 0){
+	e.preventDefault();
+	$('#result').html("Can't login. All Fields are Required!").removeClass("alert-info").addClass("alert-warning");
+	return;
+	}
+
+	$.ajax({
+		url : $(this).attr('action'),
+		type : $(this).attr('method'),
+		data : $(this).serialize(),
+		success : function(json){
+		  if(json.is_logged_in_client){
+		  window.location.href="/play";
+		  }
+		  if(json.is_logged_in_admin){
+		  window.location.href="/admin";
+		  }
+		  if(json.error_message){
+		   $('#result').html(json.error_message);
+		  }
+		},
+		error : function(xhr,errmsg,err) {
+		  $('#result').html(errmsg);
+		}
+	});
+});
+</script>
+{%endblock content%}
+
+

@@ -1,0 +1,26 @@
+{% extends 'base.html'%}
+{%block content%}
+{{scores_list}}
+
+<h1 class="jumbotron">Pro Players <a href="/play" class="btn btn-link">Back</a></h1>
+{%if scores_list%}
+<table style="width:100%">
+	<tr>
+		<th>Players</th>
+		<th>Points</th>
+		<th>Created</th>
+	</tr>
+<hr/>
+	{%for score in scores_list%}
+	<tr>
+		<td>{{score.Owner}} </td>
+		<td>{{score.score}}</td>
+		<td>{{score.created}}</td>
+	</tr>
+	{%endfor%}
+</table>
+{%else%}
+	 <p>No User found</p>
+
+{%endif%}
+{%endblock content%}

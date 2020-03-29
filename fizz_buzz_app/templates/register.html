@@ -1,0 +1,71 @@
+{% extends 'base.html'%}
+{%block content%}
+
+{%if LoginError%}
+<h4 id="result" class="log alert alert-warning">{{LoginError}}</h4>
+{%else%}
+<h4 id="result" class="log alert alert-info">Register</h4>
+{%endif%}
+
+<div class="form-box">
+<form id="myform" class="form-horizontal" role="form" method="POST" action='{% url "validateregister"%}'>
+{%csrf_token%}
+    <div class="form-group">
+      <label for="name">Enter Full Name</label>
+      <input class="form-control" type="text" id="fname" name="name">
+    </div>
+    <div class="form-group">
+      <label for="name">Enter Email</label>
+      <input class="form-control" type="email" id="email" name="email">
+    </div>WWW
+    <div class="form-group">
+      <label for="email">Enter Password</label>
+      <input class="form-control" type="password" id="pass1" name="pass1">
+    </div>
+	
+    <div class="form-group">
+      <label for="email">Confirm Password</label>
+      <input class="form-control" type="password" id="pass2" name="pass2">
+    </div>
+	
+   <a href="#" class="btn btn-link">Create new account?</a>
+   <a href="#" class="btn btn-link">Forgot Password?</a><br><hr/>
+    <input class="btn btn-primary" id="login" style="background:orange" type="submit" value="Login" />
+  </form>
+</div>
+
+
+<script>
+$("#myform").submit(function (e) {	
+    e.preventDefault();
+	var email = $("#email").val();
+	var password1 = $("#pass1").val();   
+	var password2 = $("#pass2").val();   
+	var fname = $("#fname").val();   
+	if(password1.length == 0 || password2.length == 0 || email.length == 0 || fname.length == 0){
+	e.preventDefault();
+	$('#result').html("All Fields are Required!").removeClass("alert-info").addClass("alert-warning");
+	return;
+	}
+
+	$.ajax({
+		url : $(this).attr('action'),
+		type : $(this).attr('method'),
+		data : $(this).serialize(),
+		success : function(json){
+		  if(json.email_exists){
+		  $('#result').html("sorry email aready in use");
+		  }else{
+		  alert("new user created");
+		  window.location.href="/play";
+		  }
+		},
+		error : function(xhr,errmsg,err) {
+		  $('#result').html(errmsg);
+		}
+	});
+});
+</script>
+{%endblock content%}
+
+
