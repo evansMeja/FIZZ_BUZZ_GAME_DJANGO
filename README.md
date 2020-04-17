@@ -1,4 +1,4 @@
 # FIZZ_BUZZ_GAME_DJANGO
 simple game for children in django
 
-[a link](http://evanso.pythonanywhere.com/)
+[play fizzbuzz game in django](http://evanso.pythonanywhere.com/)
